@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ajxybgwszhkwmantbhdj.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqeHliZ3dzemhrd21hbnRiaGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExODMyNzgsImV4cCI6MjA2Njc1OTI3OH0.v06Tc_BWc_pCr5a8N50UTLUyf3dIIUjEzJIsI_1yufc';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://gcdzvjfkesiluwrjknab.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjZHp2amZrZXNpbHV3cmprbmFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU0NzE3NzgsImV4cCI6MjA1MTA0Nzc3OH0.v06Tc_BWc_pCr5a8N50UTLUyf3dIIUjEzJIsI_1yufc';
 
 if (!supabaseKey) {
   console.warn('⚠️ Supabase anon key not found. Please add VITE_SUPABASE_ANON_KEY to your environment variables.');
@@ -14,7 +14,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false
+    detectSessionInUrl: false,
+    flowType: 'pkce'
   }
 });
 

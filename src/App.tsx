@@ -17,7 +17,21 @@ import { Loader } from 'lucide-react';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <div className="text-center">
+          <div className="bg-gradient-to-r from-blue-500 to-green-500 rounded-full p-4 w-20 h-20 mx-auto mb-6 shadow-lg">
+            <Loader className="w-12 h-12 text-white animate-spin" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">VitaNest</h2>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
@@ -49,6 +63,7 @@ function App() {
     initializeAuth();
   }, [initializeAuth]);
 
+  // Show loading screen while initializing
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -70,7 +85,14 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/community" element={<CommunityPage />} />
-          <Route path="/auth" element={isAuthenticated ? <Navigate to="/app/dashboard" /> : <AuthPage />} />
+          
+          {/* Auth Route - redirect to dashboard if already authenticated */}
+          <Route 
+            path="/auth" 
+            element={
+              isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <AuthPage />
+            } 
+          />
 
           {/* Protected App Routes */}
           <Route
@@ -91,8 +113,13 @@ function App() {
             <Route path="billing" element={<BillingSettings />} />
           </Route>
 
-          {/* Fallback Route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Fallback Route - redirect based on auth status */}
+          <Route 
+            path="*" 
+            element={
+              <Navigate to={isAuthenticated ? "/app/dashboard" : "/auth"} replace />
+            } 
+          />
         </Routes>
 
         {/* Bolt.new Badge */}
