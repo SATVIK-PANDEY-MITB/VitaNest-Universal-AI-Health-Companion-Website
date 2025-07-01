@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const results = await SupabaseService.testDatabaseConnection();
       return results;
-    } catch (error: any) {
+    } catch (error) {
       return [{ table: 'connection', status: 'error', error: error.message }];
     }
   },
@@ -176,9 +176,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   }
 }));
 
-let authChangeTimeout: any;
+let authChangeTimeout: NodeJS.Timeout;
 
-supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+supabase.auth.onAuthStateChange(async (event, session) => {
   if (authChangeTimeout) clearTimeout(authChangeTimeout);
   authChangeTimeout = setTimeout(async () => {
     const { initializeAuth } = useAuthStore.getState();
