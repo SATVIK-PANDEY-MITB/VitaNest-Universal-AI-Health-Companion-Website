@@ -76,14 +76,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('🔐 AuthStore: Starting sign in process...');
+      
       try {
         await supabase.auth.signOut();
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch {}
+      
       const { user: authUser, session } = await SupabaseService.signIn(email, password);
+      
+      console.log('📝 AuthStore: Sign in result:', { authUser: !!authUser, session: !!session });
+      
       if (authUser && session) {
+        console.log('✅ AuthStore: Creating user profile...');
         const user = await get().ensureUserProfileExists(authUser);
         set({ user, isAuthenticated: true, isLoading: false, error: null });
+        
+        console.log('✅ AuthStore: User signed in successfully');
+        
         try {
           const { initializeSampleData } = useHealthStore.getState();
           await initializeSampleData(user.id);
@@ -92,6 +102,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error('Authentication failed - no user data received');
       }
     } catch (error: any) {
+      console.error('❌ AuthStore: Sign in failed:', error);
       let errorMessage = 'Sign in failed. Please try again.';
       if (error.message) errorMessage = error.message;
       set({ isLoading: false, error: errorMessage, user: null, isAuthenticated: false });
@@ -102,11 +113,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (email: string, password: string, name: string) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('🔐 AuthStore: Starting sign up process...');
+      
       const { user: authUser, session } = await SupabaseService.signUp(email, password, name);
+      
+      console.log('📝 AuthStore: Sign up result:', { authUser: !!authUser, session: !!session });
+      
       if (authUser) {
         await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('✅ AuthStore: Creating user profile...');
         const user = await get().ensureUserProfileExists(authUser);
         set({ user, isAuthenticated: true, isLoading: false, error: null });
+        
+        console.log('✅ AuthStore: User signed up successfully');
+        
         try {
           const { initializeSampleData } = useHealthStore.getState();
           await initializeSampleData(user.id);
@@ -115,6 +135,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error('Account creation failed. Please try again.');
       }
     } catch (error: any) {
+      console.error('❌ AuthStore: Sign up failed:', error);
       let errorMessage = 'Account creation failed. Please try again.';
       if (error.message) errorMessage = error.message;
       set({ isLoading: false, error: errorMessage, user: null, isAuthenticated: false });

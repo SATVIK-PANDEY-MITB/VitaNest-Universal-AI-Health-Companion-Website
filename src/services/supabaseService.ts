@@ -117,31 +117,46 @@ export class SupabaseService {
       if (!emailRegex.test(email)) throw new Error('Invalid email format');
       const cleanEmail = email.toLowerCase().trim();
       const cleanName = name.trim();
+      
+      console.log('🔐 Attempting to sign up user:', cleanEmail);
+      
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
+          emailRedirectTo: undefined,
           data: {
             name: cleanName,
             display_name: cleanName
           }
         }
       });
+      
+      console.log('📝 Signup response:', { data, error });
+      
       if (error) {
+        console.error('❌ Signup error:', error);
         if (error.message.includes('User already registered')) {
+          console.log('🔄 User exists, attempting sign in...');
           return await this.signIn(cleanEmail, password);
         } else if (error.message.includes('Password should be at least')) {
           throw new Error('Password must be at least 6 characters long');
         } else if (error.message.includes('Invalid email')) {
           throw new Error('Please enter a valid email address');
+        } else if (error.message.includes('Email rate limit exceeded')) {
+          throw new Error('Too many signup attempts. Please wait a few minutes and try again.');
         } else {
           throw new Error(`Account creation failed: ${error.message}`);
         }
       }
+      
       if (!data.user) throw new Error('Account creation failed. Please try again.');
+      
+      console.log('✅ User created successfully:', data.user.id);
       await this.ensureUserProfileExists(data.user.id, cleanEmail, cleanName);
       return data;
     } catch (error: any) {
+      console.error('❌ SignUp error:', error);
       throw error;
     }
   }
@@ -150,22 +165,34 @@ export class SupabaseService {
     try {
       if (!email || !password) throw new Error('Email and password are required');
       const cleanEmail = email.toLowerCase().trim();
+      
+      console.log('🔐 Attempting to sign in user:', cleanEmail);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password
       });
+      
+      console.log('📝 Signin response:', { data, error });
+      
       if (error) {
+        console.error('❌ Signin error:', error);
         if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid email or password')) {
           throw new Error('Invalid email or password. Please check your credentials and try again.');
         } else if (error.message.includes('Email not confirmed')) {
           throw new Error('Please verify your email address before signing in.');
         } else if (error.message.includes('Too many requests')) {
           throw new Error('Too many login attempts. Please wait a few minutes and try again.');
+        } else if (error.message.includes('signup_disabled')) {
+          throw new Error('New signups are currently disabled. Please contact support.');
         } else {
           throw new Error(`Sign in failed: ${error.message}`);
         }
       }
+      
       if (!data.user || !data.session) throw new Error('Sign in failed. No user session created.');
+      
+      console.log('✅ User signed in successfully:', data.user.id);
       await this.ensureUserProfileExists(
         data.user.id,
         data.user.email || cleanEmail,
@@ -173,6 +200,7 @@ export class SupabaseService {
       );
       return data;
     } catch (error: any) {
+      console.error('❌ SignIn error:', error);
       throw error;
     }
   }
